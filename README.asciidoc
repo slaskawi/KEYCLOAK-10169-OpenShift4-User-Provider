@@ -1,0 +1,37 @@
+= OpenShift 4 extension
+
+This project contains a custom OpenShift 4 extension that uses correct User Profile URL
+(see https://issues.jboss.org/browse/KEYCLOAK-10169[KEYCLOCK-10169]).
+
+== How to install it?
+
+In order to install this extension, you need to have Keycloak (I tested this with `6.0.1`) or RH-SSO `7.x`.
+
+* Copy `target/openshift4-extension-6.0.1.jar` to `$KC_HOME/standalone/deployments`
+
+[source,bash]
+----
+cp target/openshift4-extension-6.0.1.jar ~/rh-sso-7.1/standalone/deployments
+----
+
+* Start RHSSO:
+
+[source,bash]
+----
+~/rh-sso-7.1/bin/standalone.sh
+----
+
+* Make sure the extension started properly. It will generate a warning (please ignore it):
+
+[source,bash]
+----
+09:33:44,345 WARN  [org.jboss.as.dependency.private] (MSC service thread 1-4) WFLYSRV0018: Deployment "deployment.openshift4-extension-6.0.1.jar" is using a private module ("org.keycloak.keycloak-services:main") which may be changed or removed in future versions without notice.
+----
+
+* Navigate to the Identity Brokering page and turn the OpenShift 4 extension on:
+
+image::img/OpenShift_4_Provider.png[]
+
+== Feedback
+
+Please put your comments into https://issues.jboss.org/browse/KEYCLOAK-10169

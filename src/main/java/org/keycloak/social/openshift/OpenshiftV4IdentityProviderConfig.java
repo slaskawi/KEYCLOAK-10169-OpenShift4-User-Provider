@@ -17,7 +17,7 @@ public class OpenshiftV4IdentityProviderConfig extends OAuth2IdentityProviderCon
         },
         AUTHORIZATION_RESOURCE("authorizationResource", "/oauth/authorize"),
         TOKEN_RESOURCE("tokenResource", "/oauth/token"),
-        PROFILE_RESOURCE("profileResource", "/oapi/v1/users/~"),
+        PROFILE_RESOURCE("profileResource", "/apis/user.openshift.io/v1/users/~"),
         DEFAULT_SCOPE("defaultScope", "user:info");
 
         private final String defaultValue;
