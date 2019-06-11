@@ -1,16 +1,24 @@
 package org.keycloak.social.openshift;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.keycloak.broker.oidc.AbstractOAuth2IdentityProvider;
 import org.keycloak.broker.oidc.mappers.AbstractJsonUserAttributeMapper;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
 import org.keycloak.broker.provider.IdentityBrokerException;
 import org.keycloak.broker.provider.util.SimpleHttp;
 import org.keycloak.broker.social.SocialIdentityProvider;
+import org.keycloak.connections.httpclient.HttpClientBuilder;
 import org.keycloak.events.EventBuilder;
 import org.keycloak.models.KeycloakSession;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -18,13 +26,43 @@ import java.util.Optional;
  *
  */
 public class OpenshiftV4IdentityProvider extends AbstractOAuth2IdentityProvider<OpenshiftV4IdentityProviderConfig> implements SocialIdentityProvider<OpenshiftV4IdentityProviderConfig> {
+    private static final String BASE_URL = "https://api.preview.openshift.com";
+    private static final String AUTHORIZATION_RESOURCE = "/oauth/authorize";
+    private static final String TOKEN_RESOURCE = "/oauth/token";
+    private static final String PROFILE_RESOURCE = "/apis/user.openshift.io/v1/users/~";
+    private static final String DEFAULT_SCOPE = "user:info";
 
+    private Map<String, Object> getAuthJson(String baseUrl) {
+        try (CloseableHttpClient httpClient = new HttpClientBuilder().build()) {
+            HttpGet getRequest = new HttpGet(
+                baseUrl + "/.well-known/oauth-authorization-server");
+            getRequest.addHeader("accept", "application/json");
+    
+            HttpResponse response = httpClient.execute(getRequest);
+    
+            if (response.getStatusLine().getStatusCode() != 200) {
+                throw new RuntimeException("Failed : HTTP error code : "
+                   + response.getStatusLine().getStatusCode());
+            }
+    
+            Map<String, Object> map = new ObjectMapper().readValue(response.getEntity().getContent(), Map.class);
+            return map;
+          } catch (ClientProtocolException e) {
+            throw new RuntimeException(e);
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+    }
 
     public OpenshiftV4IdentityProvider(KeycloakSession session, OpenshiftV4IdentityProviderConfig config) {
         super(session, config);
-        config.setAuthorizationUrl(config.getAuthorizationUrl());
-        config.setTokenUrl(config.getTokenUrl());
-        config.setUserInfoUrl(config.getUserInfoUrl());
+        final String baseUrl = Optional.ofNullable(config.getBaseUrl()).orElse(BASE_URL);
+        Map<String, Object> oauthDescriptor = getAuthJson(config.getBaseUrl());
+        logger.info("Openshift v4 OAuth descriptor: " + oauthDescriptor);
+        config.setAuthorizationUrl((String) oauthDescriptor.get("authorization_endpoint"));
+        config.setTokenUrl((String) oauthDescriptor.get("token_endpoint"));
+        config.setUserInfoUrl(baseUrl + PROFILE_RESOURCE);
+        config.setDefaultScope(DEFAULT_SCOPE);
     }
 
     @Override
