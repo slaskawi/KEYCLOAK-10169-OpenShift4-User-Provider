@@ -61,7 +61,7 @@ public class OpenshiftV4IdentityProvider extends AbstractOAuth2IdentityProvider<
         super(session, config);
         final String baseUrl = Optional.ofNullable(config.getBaseUrl()).orElse(BASE_URL);
         Map<String, Object> oauthDescriptor = getAuthJson(session, config.getBaseUrl());
-        logger.info("Openshift v4 OAuth descriptor: " + oauthDescriptor);
+        logger.debug("Openshift v4 OAuth descriptor: " + oauthDescriptor);
         config.setAuthorizationUrl((String) oauthDescriptor.get("authorization_endpoint"));
         config.setTokenUrl((String) oauthDescriptor.get("token_endpoint"));
         config.setUserInfoUrl(baseUrl + PROFILE_RESOURCE);
