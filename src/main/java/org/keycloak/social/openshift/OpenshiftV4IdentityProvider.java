@@ -61,7 +61,7 @@ public class OpenshiftV4IdentityProvider extends AbstractOAuth2IdentityProvider<
         super(session, config);
         final String baseUrl = Optional.ofNullable(config.getBaseUrl()).orElse(BASE_URL);
         Map<String, Object> oauthDescriptor = getAuthJson(session, config.getBaseUrl());
-        logger.debug("Openshift v4 OAuth descriptor: " + oauthDescriptor);
+        logger.debugv("Openshift v4 OAuth descriptor: {0}", oauthDescriptor);
         config.setAuthorizationUrl((String) oauthDescriptor.get("authorization_endpoint"));
         config.setTokenUrl((String) oauthDescriptor.get("token_endpoint"));
         config.setUserInfoUrl(baseUrl + PROFILE_RESOURCE);
@@ -87,7 +87,7 @@ public class OpenshiftV4IdentityProvider extends AbstractOAuth2IdentityProvider<
 
     private BrokeredIdentityContext extractUserContext(JsonNode profile) {
         JsonNode metadata = profile.get("metadata");
-
+        logger.debugv("extractUserContext: metadata = {0}", metadata);
         final BrokeredIdentityContext user = new BrokeredIdentityContext(getJsonProperty(metadata, "uid"));
         user.setUsername(getJsonProperty(metadata, "name"));
         user.setName(getJsonProperty(profile, "fullName"));
@@ -114,7 +114,7 @@ public class OpenshiftV4IdentityProvider extends AbstractOAuth2IdentityProvider<
 
     @Override
     protected BrokeredIdentityContext extractIdentityFromProfile(EventBuilder event, JsonNode profile) {
-        final BrokeredIdentityContext user = extractUserContext(profile.get("metadata"));
+        final BrokeredIdentityContext user = extractUserContext(profile);
         AbstractJsonUserAttributeMapper.storeUserProfileForMapper(user, profile, getConfig().getAlias());
         return user;
     }
